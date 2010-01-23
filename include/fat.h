@@ -17,18 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _TOOLS_H_
-#define _TOOLS_H_
+#ifndef _FAT_H_
+#define _FAT_H_
 
 #include "types.h"
 
-/* Macros */
-#define BIT_SET(x, y)	(x |=  y)
-#define BIT_DEL(x, y)	(x &= ~y)
-#define BIT_CHK(x, y)	(x & y)
-
 /* Prototypes */
-void DI_Memset(void *buf, u8 val, u32 len);
-s32  DI_Memcmp(const void *a, const void *b, u32 len);
+s32  FAT_Open (const char *path, u32 mode);
+void FAT_Close(void);
+s32  FAT_Read (void *buffer, u32 len, u32 offset);
 
 #endif

@@ -46,7 +46,7 @@ void  os_sync_before_read(void *ptr, s32 size);
 void  os_sync_after_write(void *ptr, s32 size);
 void  os_syscall_50(u32 unknown);
 void  os_puts(char *str);
-s32   os_open(char *device, s32 mode);
+s32   os_open(const char *device, s32 mode);
 s32   os_close(s32 fd);
 s32   os_read(s32 fd, void *d, s32 len);
 s32   os_write(s32 fd, void *s, s32 len);

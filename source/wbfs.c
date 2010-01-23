@@ -59,9 +59,6 @@ s32 WBFS_Init(s32 device, u8 *discid)
 			return IPC_ENOMEM;
 	}
 
-	/* Close device */
-	WBFS_Close();
-
 	/* Open device */
 	fd = os_open(fs[device], 1);
 	if (fd < 0)
@@ -80,13 +77,11 @@ s32 WBFS_Init(s32 device, u8 *discid)
 
 void WBFS_Close(void)
 {
-	/* Device opened */
-	if (fd >= 0) {
-		/* Close device */
+	/* Close device */
+	if (fd >= 0)
 		os_close(fd);
-	}
 
-	/* Clear descriptor */
+	/* Reset descriptor */
 	fd = -1;
 }
 

@@ -19,6 +19,7 @@
 
 #include "dip.h"
 #include "dip_calls.h"
+#include "fat.h"
 #include "ioctl.h"
 #include "plugin.h"
 #include "syscalls.h"
@@ -77,15 +78,21 @@ s32 __DI_ReadUnencrypted(void *outbuf, u32 len, u32 offset)
 	/* Update offset */
 	offset += (config.offset[0] + config.offset[1]);
 
-	/* WBFS read */
-	if (config.mode & MODE_WBFS)
-		return WBFS_Read(outbuf, len, offset);
-
-	/* Disc read */
-	if (config.mode & MODE_DVDROM)
-		return DI_ReadDvd(outbuf, len, offset);
+	/* FAT read */
+	if (DI_ChkMode(MODE_FAT))
+		ret = FAT_Read(outbuf, len, offset);
 	else
-		return DI_ReadWod(outbuf, len, offset);
+	/* WBFS read */
+	if (DI_ChkMode(MODE_WBFS))
+		ret = WBFS_Read(outbuf, len, offset);
+	else
+	/* Disc read */
+	if (DI_ChkMode(MODE_DVDROM))
+		ret = DI_ReadDvd(outbuf, len, offset);
+	else
+		ret = DI_ReadWod(outbuf, len, offset);
+
+	return ret;
 }
 
 s32 __DI_ReadDiscId(u32 *outbuf, u32 len)
@@ -133,8 +140,8 @@ void __DI_CheckDisc(void)
 void __DI_ResetConfig(void)
 {
 	/* Reset modes */
-	config.mode &= ~MODE_DVDROM;
-	config.mode &= ~MODE_CRYPT;
+	DI_DelMode(MODE_CRYPT);
+	DI_DelMode(MODE_DVDROM);
 
 	/* Reset offsets */
 	config.offset[0] = 0;
@@ -150,7 +157,7 @@ void __DI_ResetConfig(void)
 s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 {
 	u32 cmd = inbuf[0] >> 24;
-	s32 ret = 0;
+	s32 ret = 0, res;
 
 	/* Reset error */
 	if (cmd != IOCTL_DI_REQERROR)
@@ -165,20 +172,13 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 			/* Reset DIP config */
 			__DI_ResetConfig();
 
-			/* Check mode */
-			if (config.mode & MODE_WBFS) {
-				s32 device = config.wbfs_dev;
-				u8 *discid = config.wbfs_id;
-
+			/* Non-DVD mode */
+			if (DI_ChkMode(MODE_FAT | MODE_WBFS)) {
 				/* Stop motor */
 				DI_StopMotor();
 
-				/* Initialize WBFS */
-				ret = WBFS_Init(device, discid);
-
 				/* Set cover register */
-				if (!ret)
-					config.cover |= 0x04;
+				BIT_SET(config.cover, 4);
 			} else {
 				/* Reset drive */
 				ret = DI_HandleCmd(inbuf, outbuf, size);
@@ -193,16 +193,17 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 		u32 offset = (config.offset[0] | config.offset[1]);
 
 		/* Read disc ID */
-		if (!(config.mode & MODE_WBFS)) {
+		if (!DI_ChkMode(MODE_FAT | MODE_WBFS)) {
 			/* Call command */
 			ret = DI_HandleCmd(inbuf, outbuf, size);
 
 			/* Set DVD mode */
-			config.mode |= (ret) ? MODE_DVDROM : 0;
+			if (ret)
+				DI_SetMode(MODE_DVDROM);
 		}
 
 		/* Manual read */
-		if ((config.mode & (MODE_DVDROM | MODE_WBFS)) || offset)
+		if (DI_ChkMode(MODE_DVDROM | MODE_FAT | MODE_WBFS) || offset)
 			ret = __DI_ReadDiscId(outbuf, size);
 
 		/* Check disc type */
@@ -215,7 +216,7 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 	/** Encrypted disc read **/
 	case IOCTL_DI_LOW_READ: {
 		/* Crypted read */
-		if (config.mode & MODE_CRYPT) {
+		if (DI_ChkMode(MODE_CRYPT)) {
 			u32 len    = inbuf[1];
 			u32 offset = inbuf[2];
 
@@ -256,8 +257,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Set drive offset **/
 	case IOCTL_DI_OFFSET: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_DVDROM | MODE_FAT | MODE_WBFS);
+
 		/* Set disc offset */
-		if (config.mode & (MODE_DVDROM | MODE_WBFS)) {
+		if (res) {
 			/* Calculate offset */
 			u32 offset = (inbuf[1] << 30) | inbuf[2];
 
@@ -271,8 +275,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Seek disc **/
 	case IOCTL_DI_SEEK: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_DVDROM | MODE_FAT | MODE_WBFS);
+
 		/* Seek disc */
-		if (!(config.mode & (MODE_DVDROM | MODE_WBFS)))
+		if (!res)
 			ret = DI_HandleCmd(inbuf, outbuf, size);
 
 		break;
@@ -280,8 +287,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Audio config **/
 	case IOCTL_DI_AUDIO_CONFIG: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_DVDROM | MODE_FAT | MODE_WBFS);
+
 		/* Set audio config  */
-		if (!(config.mode & (MODE_DVDROM | MODE_WBFS)))
+		if (!res)
 			ret = DI_HandleCmd(inbuf, outbuf, size);
 
 		break;
@@ -289,8 +299,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Report DVD key **/
 	case IOCTL_DI_REPORT_KEY: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_DVDROM | MODE_FAT | MODE_WBFS);
+
 		/* Report DVD key */
-		if (config.mode & (MODE_DVDROM | MODE_WBFS)) {
+		if (res) {
 			/* Wrong disc */
 			config.error = ERROR_WRONG_DISC;
 
@@ -304,8 +317,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Request cover status **/
 	case IOCTL_DI_REQCOVER: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Request cover status */
-		if (config.mode & MODE_WBFS)
+		if (res)
 			*outbuf = 0;
 		else
 			ret = DI_HandleCmd(inbuf, outbuf, size);
@@ -315,8 +331,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 
 	/** Request error code **/
 	case IOCTL_DI_REQERROR: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Request error code */
-		if (config.mode & MODE_WBFS || config.error)
+		if (res || config.error)
 			*outbuf = config.error;
 		else
 			ret = DI_HandleCmd(inbuf, outbuf, size);
@@ -346,11 +365,11 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 	case IOCTL_DI_SETCRYPT: {
 		u32 mode = inbuf[1];
 
-		/* Set crypt mode */
+		/* Enable crypt mode */
 		if (mode)
-			config.mode |=  MODE_CRYPT;
+			DI_SetMode(MODE_CRYPT);
 		else
-			config.mode &= ~MODE_CRYPT;
+			DI_DelMode(MODE_CRYPT);
 
 		break;
 	}
@@ -358,27 +377,32 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 	/** Get crypt mode **/
 	case IOCTL_DI_GETCRYPT: {
 		/* Check crypt bit */
-		*outbuf = (config.mode & MODE_CRYPT);
+		*outbuf = DI_ChkMode(MODE_CRYPT);
 
 		break;
 	}
 
 	/** Set WBFS mode **/
 	case IOCTL_DI_SETWBFS: {
-		s32  device =  inbuf[1];
-		u32 *discid = &inbuf[2];
+		s32 device = inbuf[1];
 
-		/* WBFS ID */
-		DI_Memcpy(config.wbfs_id, discid, sizeof(config.wbfs_id));
+		/* Close WBFS */
+		WBFS_Close();
 
-		/* WBFS device */
-		config.wbfs_dev = (device - 1);
+		/* Disable mode */
+		DI_DelMode(MODE_WBFS);
 
-		/* Set WBFS mode */
-		if (device)
-			config.mode |=  MODE_WBFS;
-		else
-			config.mode &= ~MODE_WBFS;
+		/* Check device */
+		if (device >= 0) {
+			u8 *discid = (u8 *)&inbuf[2];
+
+			/* Open device */
+			ret = WBFS_Init(device - 1, discid);
+
+			/* Enable mode */
+			if (!ret)
+				DI_SetMode(MODE_WBFS);
+		}
 
 		break;
 	}
@@ -386,7 +410,40 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 	/** Get WBFS mode **/
 	case IOCTL_DI_GETWBFS: {
 		/* Check WBFS bit */
-		*outbuf = (config.mode & MODE_WBFS);
+		*outbuf = DI_ChkMode(MODE_WBFS);
+
+		break;
+	}
+
+	/** Set FAT mode **/
+	case IOCTL_DI_SETFAT: {
+		u32 enable = inbuf[1];
+
+		/* Close file */
+		FAT_Close();
+
+		/* Disable mode */
+		DI_DelMode(MODE_FAT);
+
+		/* Check flag */
+		if (enable) {
+			char *filename = (char *)&inbuf[2];
+
+			/* Open file */
+			ret = FAT_Open(filename, 0);
+
+			/* Enable mode */
+			if (!ret)
+				DI_SetMode(MODE_FAT);
+		}
+
+		break;
+	}
+
+	/** Get FAT mode **/
+	case IOCTL_DI_GETFAT: {
+		/* Check FAT bit */
+		*outbuf = DI_ChkMode(MODE_FAT);
 
 		break;
 	}
@@ -428,14 +485,17 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 	u32 *outbuf = buffer->iobuf;
 
 	u32 cmd = buffer->command;
-	s32 ret = 1;
+	s32 ret = 1, res;
 
 	/* Parse command */
 	switch (cmd) {
 	/** Wait for cover close **/
 	case IOCTL_DI_WAITCVRCLOSE: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Wait for cover close */
-		if (!(config.mode & MODE_WBFS))
+		if (!res)
 			ret = DI_HandleIoctl(buffer, fd);
 
 		break;
@@ -443,8 +503,11 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 
 	/** Get cover register **/
 	case IOCTL_DI_COVER_REG: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Get cover register */
-		if (config.mode & MODE_WBFS)
+		if (res)
 			*outbuf = config.cover;
 		else
 			ret = DI_HandleIoctl(buffer, fd);
@@ -454,9 +517,12 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 
 	/** Clear cover interrupt **/
 	case IOCTL_DI_COVER_CLEAR: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Clear cover interrupt */
-		if (config.mode & MODE_WBFS)
-			config.cover &= ~0x04;
+		if (res)
+			BIT_SET(config.cover, 4);
 		else
 			ret = DI_HandleIoctl(buffer, fd);
 
@@ -465,8 +531,11 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 
 	/** Get cover status **/
 	case IOCTL_DI_COVER_STATUS: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Get cover status */
-		if (config.mode & MODE_WBFS)
+		if (res)
 			*outbuf = 0x02;
 		else
 			ret = DI_HandleIoctl(buffer, fd);
@@ -476,8 +545,11 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 
 	/** Get status register **/
 	case IOCTL_DI_STATUS_REG: {
+		/* Check modes */
+		res = DI_ChkMode(MODE_FAT | MODE_WBFS);
+
 		/* Get status register */
-		if (config.mode & MODE_WBFS)
+		if (res)
 			*outbuf = 0x0A;
 		else
 			ret = DI_HandleIoctl(buffer, fd);

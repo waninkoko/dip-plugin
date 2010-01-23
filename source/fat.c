@@ -17,18 +17,43 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _TOOLS_H_
-#define _TOOLS_H_
-
+#include "fat.h"
+#include "syscalls.h"
 #include "types.h"
 
-/* Macros */
-#define BIT_SET(x, y)	(x |=  y)
-#define BIT_DEL(x, y)	(x &= ~y)
-#define BIT_CHK(x, y)	(x & y)
+/* Variables */
+static s32 fd = -1;
 
-/* Prototypes */
-void DI_Memset(void *buf, u8 val, u32 len);
-s32  DI_Memcmp(const void *a, const void *b, u32 len);
 
-#endif
+s32 FAT_Open(const char *path, u32 mode)
+{
+	/* Open file */
+	fd = os_open(path, mode);
+	if (fd < 0)
+		return fd;
+
+	return 0;
+}
+
+void FAT_Close(void)
+{
+	/* Close file */
+	if (fd >= 0)
+		os_close(fd);
+
+	/* Reset descriptor */
+	fd = -1;
+}
+
+s32 FAT_Read(void *buffer, u32 len, u32 offset)
+{
+	s32 ret;
+
+	/* Seek file */
+	ret = os_seek(fd, offset << 2, 0);
+	if (ret < 0)
+		return ret;
+
+	/* Read file */
+	return os_read(fd, buffer, len);
+}

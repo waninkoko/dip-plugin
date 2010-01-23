@@ -50,6 +50,8 @@
 #define IOCTL_DI_SETWBFS		0xF4
 #define IOCTL_DI_GETWBFS		0xF5
 #define IOCTL_DI_RESET_DISABLE		0xF6
+#define IOCTL_DI_SETFAT			0xF7
+#define IOCTL_DI_GETFAT			0xF8
 #define IOCTL_DI_CUSTOMCMD		0xFF
 
 #endif

@@ -20,6 +20,7 @@
 #ifndef _PLUGIN_H_
 #define _PLUGIN_H_
 
+#include "tools.h"
 #include "types.h"
 
 /* Return codes */
@@ -37,6 +38,12 @@
 #define MODE_DVDROM		0x01
 #define MODE_CRYPT		0x02
 #define MODE_WBFS		0x04
+#define MODE_FAT		0x08
+
+/* Macros */
+#define DI_SetMode(bit)		BIT_SET(config.mode, (bit))
+#define DI_DelMode(bit)		BIT_DEL(config.mode, (bit))
+#define DI_ChkMode(bit)		BIT_CHK(config.mode, (bit))
 
 /* Disc types */
 enum {
@@ -71,5 +78,5 @@ struct dipConfig {
 
 /* Extern */
 extern struct dipConfig config;
- 
+
 #endif
