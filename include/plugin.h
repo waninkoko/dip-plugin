@@ -28,7 +28,7 @@
 
 /* Disc lengths */
 #define DVD5_LENGTH     	0x46090000
-#define DVD9_LENGTH     	0x7ED30000
+#define DVD9_LENGTH     	0x7ED38000
 
 /* Error codes */
 #define ERROR_BLOCK_RANGE	0x52100
