@@ -23,7 +23,7 @@
 #include "ipc.h"
 #include "types.h"
 
-/* Prototypes */
+/* IOS syscalls */
 s32   os_thread_create(u32 (*entry)(void *arg), void *arg, void *stack, u32 stacksize, u32 priority, s32 autostart);
 void  os_thread_set_priority(u32 priority);
 s32   os_thread_get_priority(void);
@@ -45,7 +45,6 @@ void  os_message_queue_ack(void *message, s32 result);
 void  os_sync_before_read(void *ptr, s32 size);
 void  os_sync_after_write(void *ptr, s32 size);
 void  os_syscall_50(u32 unknown);
-void  os_puts(char *str);
 s32   os_open(const char *device, s32 mode);
 s32   os_close(s32 fd);
 s32   os_read(s32 fd, void *d, s32 len);
@@ -63,5 +62,8 @@ s32   os_unregister_event_handler(s32 device);
 s32   os_software_IRQ(s32 dev);
 void  os_get_key(s32 keyid, void *out);
 void *os_virt_to_phys(void *ptr);
+
+/* ARM syscalls */
+void write(const char *str);
 
 #endif

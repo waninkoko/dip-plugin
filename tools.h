@@ -17,33 +17,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _IPC_H_
-#define _IPC_H_
+#ifndef _TOOLS_H_
+#define _TOOLS_H_
 
 #include "types.h"
 
-/* Error codes */
-#define IPC_EINVAL		 -1
-#define IPC_ENOENT		 -6
-#define IPC_ENOMEM		-22
-#define IPC_EIO			  2
-#define IPC_EINCMD		128
+/* Macros */
+#define BIT_SET(x, y)	(x |=  y)
+#define BIT_DEL(x, y)	(x &= ~y)
+#define BIT_CHK(x, y)	(x & y)
 
 
-/* IOCTL vector */
-typedef struct {
-	void *data;
-	u32   len;
-} ioctlv;
+/* Prototypes */
+void DCInvalidateRange(void* ptr, int size);
+void DCFlushRange(void* ptr, int size);
+void ICInvalidate(void);
 
-/* IOCTL structure */
-typedef struct {
-	u32 command;
+u32  Perms_Read(void);
+void Perms_Write(u32 flags);
 
-	u32 *inbuf;
-	u32  inlen;
-	u32 *iobuf;
-	u32  iolen;
-} ioctl;
+s32  Swi_MLoad(u32 arg0, u32 arg1, u32 arg2, u32 arg3);
+
+void *VirtToPhys(void *address);
+void *PhysToVirt(void *address);
 
 #endif
+

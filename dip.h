@@ -17,15 +17,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-	.text
-	.align 2
-	.code  16
+#ifndef _DIP_H_
+#define _DIP_H_
 
-	.thumb_func
-	.global syscall_write
-syscall_write:
-	mov	r2, lr
-	mov	r1, r0
-	mov	r0, #4
-	svc	0xab
-	bx	r2
+#include "types.h"
+
+/* Disc lengths */
+#define DVD5_LENGTH             0x46090000
+#define DVD9_LENGTH             0x7ED38000
+
+/* Disc sector */
+#define SECTOR_SIZE		0x800
+#define MAX_SECTOR_SIZE		0x7F8000
+
+
+/* Prototypes */
+u32 DI_CustomCmd(void *inbuf, void *outbuf);
+s32 DI_StopMotor(void);
+s32 DI_ReadDvd(u8 *outbuf, u32 len, u32 offset);
+s32 DI_ReadWod(void *outbuf, u32 len, u32 offset);
+
+#endif

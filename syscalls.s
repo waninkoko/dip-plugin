@@ -23,6 +23,10 @@
 	bx lr
 .endm
 
+
+/*
+ * IOS syscalls
+ */
 	.code 32
 	.global os_thread_create
 os_thread_create:
@@ -262,3 +266,16 @@ os_virt_to_phys:
 	.global os_syscall_50
 os_syscall_50:
 	syscall 0x50
+
+
+/*
+ * ARM syscalls
+ */
+	.code 32
+	.global write
+write:
+	mov	r2, lr
+	adds	r1, r0, #0
+	movs	r0, #4
+	svc	0xab
+	bx	r2

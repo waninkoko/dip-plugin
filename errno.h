@@ -17,12 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _WBFS_H_
-#define _WBFS_H_
+#ifndef _ERRNO_H_
+#define _ERRNO_H_
 
-/* Prototypes */
-s32  WBFS_Init (s32 device, u8 *disid);
-void WBFS_Close(void);
-s32  WBFS_Read (void *outbuf, u32 len, u32 offset);
+/* Return codes */
+#define DIP_EIO                 0xA000
+
+/* Error codes */
+#define ERROR_BLOCK_RANGE       0x52100
+#define ERROR_WRONG_DISC        0x53100
 
 #endif

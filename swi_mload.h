@@ -17,19 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DIP_H_
-#define _DIP_H_
+#ifndef _SWI_MLOAD_H_
+#define _SWI_MLOAD_H_
 
 #include "types.h"
 
-/* Constants */
-#define SECTOR_SIZE		0x800
-#define MAX_SECTOR_SIZE		0x7F8000
-
 /* Prototypes */
-u32 DI_CustomCmd(void *inbuf, void *outbuf);
-s32 DI_StopMotor(void);
-s32 DI_ReadDvd(u8 *outbuf, u32 len, u32 offset);
-s32 DI_ReadWod(void *outbuf, u32 len, u32 offset);
+void Swi_Memcpy(void *dst, void *src, s32 len);
+void Swi_uMemcpy(void *dst, void *src, s32 len);
+s32  Swi_CallFunc(s32 (*func)(void *in, void *out), void *in, void *out);
+u32  Swi_GetSyscallBase(void);
+u32  Swi_GetIosInfo(void *buffer);
 
 #endif

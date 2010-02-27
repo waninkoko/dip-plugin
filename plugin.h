@@ -20,25 +20,18 @@
 #ifndef _PLUGIN_H_
 #define _PLUGIN_H_
 
+#include "ipc.h"
 #include "tools.h"
 #include "types.h"
 
-/* Return codes */
-#define DIP_EIO			0xA000
-
-/* Disc lengths */
-#define DVD5_LENGTH     	0x46090000
-#define DVD9_LENGTH     	0x7ED38000
-
-/* Error codes */
-#define ERROR_BLOCK_RANGE	0x52100
-#define ERROR_WRONG_DISC	0x53100
+/* WOD magic word */
+#define WOD_MAGIC		0x5D1C9EA3
 
 /* Mode codes */
 #define MODE_DVDROM		0x01
 #define MODE_CRYPT		0x02
 #define MODE_WBFS		0x04
-#define MODE_FAT		0x08
+#define MODE_FILE		0x08
 
 /* Macros */
 #define DI_SetMode(bit)		BIT_SET(config.mode, (bit))
@@ -75,6 +68,10 @@ struct dipConfig {
 	u32 cover;
 	u32 noreset;
 };
+
+/* Prototypes */
+s32 DI_EmulateIoctl(ioctl *buffer, s32 fd);
+s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size);
 
 /* Extern */
 extern struct dipConfig config;

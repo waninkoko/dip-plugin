@@ -17,16 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "dip.h"
 #include "dip_calls.h"
 #include "dma.h"
+#include "errno.h"
 #include "ioctl.h"
-#include "plugin.h"
 #include "syscalls.h"
-#include "tools.h"
-#include "types.h"
 
-/* Read constants */
+/* Constants */
 #define MAX_READ_RETRIES	16
 
 
@@ -35,7 +35,7 @@ s32 __DI_ReadA8(void *outbuf, u32 len, u32 offset)
 	u32 dic[8];
 
 	/* Clear buffer */
-	DI_Memset(dic, 0, sizeof(dic));
+	memset(dic, 0, sizeof(dic));
 
 	/* Prepare input buffer */
 	dic[0] = IOCTL_DI_READ_A8 << 24;
@@ -59,7 +59,7 @@ s32 __DI_ReadD0(void *outbuf, u32 len, u32 lba)
 		u32 dic[8];
 
 		/* Clear buffer */
-		DI_Memset(dic, 0, sizeof(dic));
+		memset(dic, 0, sizeof(dic));
 
 		/* Prepare input buffer */
 		dic[0] = IOCTL_DI_READ_D0 << 24;
@@ -97,7 +97,7 @@ s32 __DI_ReadFromSector(void *outbuf, u32 len, u32 pos, u32 lba)
 
 	/* Extract data */
 	if (!ret)
-		DI_Memcpy(outbuf, buf + pos, len);
+		memcpy(outbuf, buf + pos, len);
 
 	/* Free memory */
 	DI_Free(buf);
@@ -111,14 +111,14 @@ u32 DI_CustomCmd(void *inbuf, void *outbuf)
 	u32 *diRegs = (u32 *)0x0D006000;
 
 	/* Set registers */
-	DI_Memcpy(diRegs, inbuf, 32);
+	memcpy(diRegs, inbuf, 32);
 
 	/* Wait */
 	while (diRegs[7] & 1);
 
 	/* Copy registers */
 	if (outbuf)
-		DI_Memcpy(outbuf, diRegs, 32);
+		memcpy(outbuf, diRegs, 32);
 
 	return diRegs[8];
 }

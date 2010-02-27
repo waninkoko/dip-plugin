@@ -17,27 +17,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _PATCHES_H_
+#define _PATCHES_H_
+
 #include "types.h"
 
+/* Prototypes */
+void Patch_DipModule(u32 version);
 
-void DI_Memset(void *buf, u8 val, u32 len)
-{
-	u32 cnt;
+#endif
 
-	/* Clean buffer */
-	for (cnt = 0; cnt < len; cnt++)
-		((u8 *)buf)[cnt] = val;
-}
-
-s32 DI_Memcmp(const void *a, const void *b, u32 len)
-{
-	u8 *p = (u8 *)a, *q = (u8 *)b;
-	u32 cnt;
-
-	/* Compare bytes */
-	for (cnt = 0; cnt < len; cnt++)
-		if (p[cnt] != q[cnt])
-			return -1;
-
-	return 0;
-}

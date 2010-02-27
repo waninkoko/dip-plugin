@@ -17,43 +17,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fat.h"
-#include "syscalls.h"
+#ifndef _MAIN_H_
+#define _MAIN_H_
+
 #include "types.h"
 
-/* Variables */
-static s32 fd = -1;
+/* IOS info structure */
+typedef struct {
+	/* Syscall base */
+	u32 syscall;
 
+	/* Module versions */
+	u32 dipVersion;
+	u32 esVersion;
+	u32 ffsVersion;
+	u32 iopVersion;
+} iosInfo;
 
-s32 FAT_Open(const char *path, u32 mode)
-{
-	/* Open file */
-	fd = os_open(path, mode);
-	if (fd < 0)
-		return fd;
+/* Externs */
+extern iosInfo ios;
 
-	return 0;
-}
-
-void FAT_Close(void)
-{
-	/* Close file */
-	if (fd >= 0)
-		os_close(fd);
-
-	/* Reset descriptor */
-	fd = -1;
-}
-
-s32 FAT_Read(void *buffer, u32 len, u32 offset)
-{
-	s32 ret;
-
-	/* Seek file */
-	ret = os_seek(fd, offset << 2, 0);
-	if (ret < 0)
-		return ret;
-
-	/* Read file */
-	return os_read(fd, buffer, len);
-}
+#endif

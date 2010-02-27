@@ -17,18 +17,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-	.section .init, "x"
+#ifndef _FILE_H_
+#define _FILE_H_
 
-	.code 32
-	.thumb_func
+#include "types.h"
 
-	.global _emulateIoctl
-_emulateIoctl:
-	ldr	r3, =DI_EmulateIoctl + 1
-	bx	r3
+/* Prototypes */
+s32  File_Open (const char *path);
+void File_Close(void);
+s32  File_Read (void *buffer, u32 len, u32 offset);
 
-	.global _emulateCmd
-_emulateCmd:
-	ldr	r3, =DI_EmulateCmd + 1
-	bx	r3
-
+#endif

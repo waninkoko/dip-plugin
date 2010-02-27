@@ -17,14 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _FAT_H_
-#define _FAT_H_
-
-#include "types.h"
+#ifndef _WBFS_H_
+#define _WBFS_H_
 
 /* Prototypes */
-s32  FAT_Open (const char *path, u32 mode);
-void FAT_Close(void);
-s32  FAT_Read (void *buffer, u32 len, u32 offset);
+s32  WBFS_Init (u32 device, u8 *disid);
+void WBFS_Close(void);
+s32  WBFS_Read (void *outbuf, u32 len, u32 offset);
 
 #endif

@@ -17,18 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _TOOLS_H_
-#define _TOOLS_H_
+#ifndef _DIP_CALLS_H_
+#define _DIP_CALLS_H_
 
 #include "types.h"
 
-/* Macros */
-#define BIT_SET(x, y)	(x |=  y)
-#define BIT_DEL(x, y)	(x &= ~y)
-#define BIT_CHK(x, y)	(x & y)
-
 /* Prototypes */
-void DI_Memset(void *buf, u8 val, u32 len);
-s32  DI_Memcmp(const void *a, const void *b, u32 len);
+s32   DI_ReadHash(void); 
+void *DI_Alloc(u32 size, u32 align);
+void  DI_Free(void *ptr);
+void  DI_Printf(const char *fmt, ...);
+
+/* DIP handlers */
+s32 DI_HandleIoctl(void *buffer, u32 fd);
+s32 DI_HandleCmd(void *inbuf, const void *outbuf, u32 size);
 
 #endif

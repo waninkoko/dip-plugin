@@ -17,23 +17,19 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "dip_calls.h"
-#include "ioctl.h"
-#include "plugin.h"
 #include "syscalls.h"
-#include "tools.h"
-#include "wbfs.h"
 
-/* Constants */
-#define WBFS_BASE		(('W'<<24) | ('F'<<16) | ('S'<<8))
-
-/* IOCTL commands */
-#define IOCTL_WBFS_OPEN_DISC	(WBFS_BASE + 0x1)
-#define IOCTL_WBFS_READ_DISC	(WBFS_BASE + 0x2)
+/* Commands */
+#define IOCTL_WBFS_BASE		(('W'<<24) | ('F'<<16) | ('S'<<8))
+#define IOCTL_WBFS_OPEN		(IOCTL_WBFS_BASE + 0x1)
+#define IOCTL_WBFS_READ		(IOCTL_WBFS_BASE + 0x2)
 
 /* Variables */
-static char *fs[] = { "/dev/usb/ehc", "/dev/sdio/sdhc" };
-static s32   fd   = -1;
+static char *devFs[] = { "/dev/usb2", "/dev/sdio/sdhc" };
+static s32   devFd   = -1;
 
 
 /* I/O buffer */
@@ -46,12 +42,8 @@ static struct {
 } *iobuf = NULL;
 
 
-s32 WBFS_Init(s32 device, u8 *discid)
+s32 WBFS_Init(u32 device, u8 *discid)
 {
-	/* Wrong device */
-	if (device < 0)
-		return IPC_EINVAL;
-
 	/* Allocate memory */
 	if (!iobuf) {
 		iobuf = DI_Alloc(sizeof(*iobuf), 32);
@@ -60,29 +52,29 @@ s32 WBFS_Init(s32 device, u8 *discid)
 	}
 
 	/* Open device */
-	fd = os_open(fs[device], 1);
-	if (fd < 0)
-		return fd;
+	devFd = os_open(devFs[device], 1);
+	if (devFd < 0)
+		return devFd;
 
 	/* Copy disc ID */
-	DI_Memcpy(iobuf->buffer, discid, 6);
+	memcpy(iobuf->buffer, discid, 6);
 
 	/* Setup vector */
 	iobuf->vector[0].data = iobuf->buffer;
 	iobuf->vector[0].len  = 6;
 
 	/* Open disc */
-	return os_ioctlv(fd, IOCTL_WBFS_OPEN_DISC, 1, 0, iobuf->vector);
+	return os_ioctlv(devFd, IOCTL_WBFS_OPEN, 1, 0, iobuf->vector);
 }
 
 void WBFS_Close(void)
 {
 	/* Close device */
-	if (fd >= 0)
-		os_close(fd);
+	if (devFd > 0)
+		os_close(devFd);
 
 	/* Reset descriptor */
-	fd = -1;
+	devFd = -1;
 }
 
 s32 WBFS_Read(void *outbuf, u32 len, u32 offset)
@@ -105,18 +97,11 @@ s32 WBFS_Read(void *outbuf, u32 len, u32 offset)
 	os_sync_after_write(iobuf, sizeof(*iobuf));
 
 	/* Read data */
-	ret = os_ioctlv(fd, IOCTL_WBFS_READ_DISC, 2, 1, iobuf->vector);
-
-	/* Read error */
-	if (ret) {
-		/* Block out of range */
-		config.error = ERROR_BLOCK_RANGE;
-
-		/* I/O error */
-		return DIP_EIO;
-	}
+	ret = os_ioctlv(devFd, IOCTL_WBFS_READ, 2, 1, iobuf->vector);
+	if (ret)
+		return ret;
 		
-	/* Invalidate range */
+	/* Invalidate cache */
 	os_sync_before_read(outbuf, len);
 
 	return 0;
