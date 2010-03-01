@@ -6,7 +6,7 @@ ENTRY(_start)
 MEMORY {
 	table		: ORIGIN = 0x0, LENGTH = 0x4000
 	exe(rwx)	: ORIGIN = 0x13800000, LENGTH = 0x1000
-	ram(rw)		: ORIGIN = 0x13801000, LENGTH = 0x4000
+	ram(rw)		: ORIGIN = 0x13801000, LENGTH = 0x3000
 }
 
 __exe_start_phys__		= 0x13800000;
@@ -14,7 +14,7 @@ __ram_start_phys__		= 0x13801000;
 
 
 SECTIONS {
-	.ios_info_table :  {
+	.ios_info_table : {
 		KEEP (*(.ios_info_table))
 	} > table
 

@@ -57,10 +57,6 @@ struct dipConfig {
 	/* Offsets */
 	u32 offset[2];
 
-	/* WBFS */
-	s32 wbfs_dev;
-	u8  wbfs_id[6];
-
 	/* Last error */
 	u32 error;
 

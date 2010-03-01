@@ -147,6 +147,7 @@ void __DI_ResetConfig(void)
 	/* Reset variables */
 	config.type    = 0;
 	config.error   = 0;
+	config.cover   = 0;
 	config.noreset = 0;
 }
 
@@ -521,7 +522,7 @@ s32 DI_EmulateIoctl(ioctl *buffer, s32 fd)
 
 		/* Clear cover interrupt */
 		if (res)
-			BIT_SET(config.cover, 4);
+			BIT_DEL(config.cover, 4);
 		else
 			ret = DI_HandleIoctl(buffer, fd);
 

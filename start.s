@@ -22,14 +22,15 @@
 
 	.EQU	ios_thread_arg,		4
 	.EQU	ios_thread_priority,	0x48
-	.EQU	ios_thread_stacksize,	0x2000
+	.EQU	ios_thread_stacksize,	0x1000
 
 
 	.global _start
 _start:
 	mov	r0, #0		@ int argc
 	mov	r1, #0		@ char *argv[]
-	blx	main
+	ldr	r3, =main
+	bx	r3
 
 
 
@@ -38,8 +39,6 @@ _start:
  */
 	.section ".ios_bss", "a", %nobits
 
-	.global ios_thread_stack_start
-ios_thread_stack_start:
 	.space	ios_thread_stacksize
 	.global ios_thread_stack	/* stack decrements from high address.. */
 ios_thread_stack:
