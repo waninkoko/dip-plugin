@@ -25,7 +25,6 @@ OBJS	=	dip.o			\
 		dip_calls.o		\
 		dma.o			\
 		file.o			\
-		fs.o			\
 		ipc.o			\
 		main.o			\
 		patches.o		\

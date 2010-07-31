@@ -396,7 +396,7 @@ s32 DI_EmulateCmd(u32 *inbuf, u32 *outbuf, u32 size)
 			u8 *discid = (u8 *)&inbuf[2];
 
 			/* Open device */
-			ret = WBFS_Init(device-1, discid);
+			ret = WBFS_Open(device-1, discid);
 
 			/* Enable mode */
 			if (!ret)

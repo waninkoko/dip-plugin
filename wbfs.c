@@ -33,47 +33,26 @@ static s32   devFd   = -1;
 
 
 /* I/O buffer */
-static struct {
-	/* IOCTL vector */
-	ioctlv vector[4];
+static ioctlv vector[4] ATTRIBUTE_ALIGN(32);
+static u32    buffer[9] ATTRIBUTE_ALIGN(32);
 
-	/* IOCTL buffer */
-	u32 buffer[9];
-} *iobuf = NULL;
-
-
-s32 WBFS_Init(void)
-{
-	/* Allocate memory */
-	if (!iobuf) {
-		iobuf = DI_Alloc(sizeof(*iobuf), 32);
-		if (!iobuf)
-			return IPC_ENOMEM;
-	}
-
-	return 0;
-}
 
 s32 WBFS_Open(u32 device, u8 *discid)
 {
-	/* No buffer */
-	if (!iobuf)
-		return -1;
-
 	/* Open device */
 	devFd = os_open(devFs[device], 1);
 	if (devFd < 0)
 		return devFd;
 
 	/* Copy disc ID */
-	memcpy(iobuf->buffer, discid, 6);
+	memcpy(buffer, discid, 6);
 
 	/* Setup vector */
-	iobuf->vector[0].data = iobuf->buffer;
-	iobuf->vector[0].len  = 6;
+	vector[0].data = buffer;
+	vector[0].len  = 6;
 
 	/* Open disc */
-	return os_ioctlv(devFd, IOCTL_WBFS_OPEN, 1, 0, iobuf->vector);
+	return os_ioctlv(devFd, IOCTL_WBFS_OPEN, 1, 0, vector);
 }
 
 void WBFS_Close(void)
@@ -91,22 +70,23 @@ s32 WBFS_Read(void *outbuf, u32 len, u32 offset)
 	s32 ret;
 
 	/* Set buffers */
-	iobuf->buffer[0] = offset;
-	iobuf->buffer[8] = len;
+	buffer[0] = offset;
+	buffer[8] = len;
 
 	/* Setup vector */
-	iobuf->vector[0].data = &iobuf->buffer[0];
-	iobuf->vector[0].len  = 4;
-	iobuf->vector[1].data = &iobuf->buffer[8];
-	iobuf->vector[1].len  = 4;
-	iobuf->vector[2].data = outbuf;
-	iobuf->vector[2].len  = len;
+	vector[0].data = &buffer[0];
+	vector[0].len  = 4;
+	vector[1].data = &buffer[8];
+	vector[1].len  = 4;
+	vector[2].data = outbuf;
+	vector[2].len  = len;
 
 	/* Flush cache */
-	os_sync_after_write(iobuf, sizeof(*iobuf));
+	os_sync_after_write(vector, sizeof(vector));
+	os_sync_after_write(buffer, sizeof(buffer));
 
 	/* Read data */
-	ret = os_ioctlv(devFd, IOCTL_WBFS_READ, 2, 1, iobuf->vector);
+	ret = os_ioctlv(devFd, IOCTL_WBFS_READ, 2, 1, vector);
 	if (ret)
 		return ret;
 

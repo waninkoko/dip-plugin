@@ -21,7 +21,6 @@
 #define _WBFS_H_
 
 /* Prototypes */
-s32  WBFS_Init (void);
 s32  WBFS_Open (u32 device, u8 *disid);
 void WBFS_Close(void);
 s32  WBFS_Read (void *outbuf, u32 len, u32 offset);
