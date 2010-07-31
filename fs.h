@@ -17,13 +17,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _WBFS_H_
-#define _WBFS_H_
+#ifndef _FS_H_
+#define _FS_H_
 
-/* Prototypes */
-s32  WBFS_Init (void);
-s32  WBFS_Open (u32 device, u8 *disid);
-void WBFS_Close(void);
-s32  WBFS_Read (void *outbuf, u32 len, u32 offset);
+#include "types.h"
+
+/* Constants */
+#define ISFS_MAXPATH		64
+
+/* IOCTL commands */
+#define IOCTL_FS_FORMAT               1
+#define IOCTL_FS_GETSTATS             2
+#define IOCTL_FS_CREATEDIR            3
+#define IOCTL_FS_READDIR              4
+#define IOCTL_FS_SETATTR              5
+#define IOCTL_FS_GETATTR              6
+#define IOCTL_FS_DELETE               7
+#define IOCTL_FS_RENAME               8
+#define IOCTL_FS_CREATEFILE           9
+#define IOCTL_FS_SETFILEVERCTRL       10
+#define IOCTL_FS_GETFILESTATS         11
+#define IOCTL_FS_GETUSAGE             12
+#define IOCTL_FS_SHUTDOWN             13
 
 #endif
+

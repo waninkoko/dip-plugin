@@ -42,7 +42,7 @@ static struct {
 } *iobuf = NULL;
 
 
-s32 WBFS_Init(u32 device, u8 *discid)
+s32 WBFS_Init(void)
 {
 	/* Allocate memory */
 	if (!iobuf) {
@@ -50,6 +50,15 @@ s32 WBFS_Init(u32 device, u8 *discid)
 		if (!iobuf)
 			return IPC_ENOMEM;
 	}
+
+	return 0;
+}
+
+s32 WBFS_Open(u32 device, u8 *discid)
+{
+	/* No buffer */
+	if (!iobuf)
+		return -1;
 
 	/* Open device */
 	devFd = os_open(devFs[device], 1);
@@ -70,7 +79,7 @@ s32 WBFS_Init(u32 device, u8 *discid)
 void WBFS_Close(void)
 {
 	/* Close device */
-	if (devFd > 0)
+	if (devFd >= 0)
 		os_close(devFd);
 
 	/* Reset descriptor */
@@ -100,7 +109,7 @@ s32 WBFS_Read(void *outbuf, u32 len, u32 offset)
 	ret = os_ioctlv(devFd, IOCTL_WBFS_READ, 2, 1, iobuf->vector);
 	if (ret)
 		return ret;
-		
+
 	/* Invalidate cache */
 	os_sync_before_read(outbuf, len);
 

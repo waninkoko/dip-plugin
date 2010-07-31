@@ -48,17 +48,28 @@ s32 __DI_System(u32 arg1, u32 arg2)
 	return 0;
 }
 
+s32 __DI_Initialize(void)
+{
+	s32 ret;
+
+	/* Get IOS info */
+	Swi_GetIosInfo(&ios);
+
+	/* Prepare system */
+	Swi_CallFunc((void *)__DI_System, NULL, NULL);
+
+	/* Initialize WBFS */
+	ret = WBFS_Init();
+	if (ret < 0)
+		return ret;
+}
+
 
 int main(void)
 {
 	/* Print info */
 	write("$IOSVersion: DIPP: " __DATE__ " " __TIME__ " 64M$\n");
 
-	/* Get IOS info */
-	Swi_GetIosInfo(&ios);
-
 	/* Initialize plugin */
-	Swi_CallFunc((void *)__DI_System, NULL, NULL);
-
-	return 0;
+	return __DI_Initialize();
 }
